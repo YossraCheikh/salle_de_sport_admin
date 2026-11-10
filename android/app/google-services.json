@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "1007745354506",
+    "project_id": "sallegym-776db",
+    "storage_bucket": "sallegym-776db.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1007745354506:android:82c0906824479c57e348f3",
+        "android_client_info": {
+          "package_name": "com.example.gym_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAefV4SHNan_6v93ZOSZVHYTOu-fOSGABo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1007745354506:android:d5e6e0e080ea08c5e348f3",
+        "android_client_info": {
+          "package_name": "com.example.salle_de_sport_admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAefV4SHNan_6v93ZOSZVHYTOu-fOSGABo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1007745354506:android:cdc46df63b46e2c6e348f3",
+        "android_client_info": {
+          "package_name": "com.example.salledesport"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAefV4SHNan_6v93ZOSZVHYTOu-fOSGABo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
