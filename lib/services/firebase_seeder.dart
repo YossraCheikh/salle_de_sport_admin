@@ -14,16 +14,18 @@ class FirebaseSeeder {
     final db = FirebaseFirestore.instance;
 
     try {
-      // 1. Seed Admin User
-      final usersSnap = await db.collection('users').get();
-      if (usersSnap.docs.isEmpty) {
-        await db.collection('users').doc('admin1').set({
+      // 1. Toujours vérifier et créer l'utilisateur Admin dans la collection 'users'
+      final adminDoc = await db.collection('users').doc('admin_gym_tn').get();
+      if (!adminDoc.exists) {
+        await db.collection('users').doc('admin_gym_tn').set({
           'name': 'Administrateur GYM',
           'email': 'admin@gym.tn',
+          'phone': '+216 20 000 000',
           'role': 'admin',
           'isActive': true,
+          'createdAt': FieldValue.serverTimestamp(),
         });
-        if (kDebugMode) print('FirebaseSeeder: Admin User seeded.');
+        if (kDebugMode) print('FirebaseSeeder: Admin User admin_gym_tn créé.');
       }
 
       // 2. Seed Subscription Plans (Tout Accès, Spécifique Activité & Séance Unique)
@@ -35,43 +37,53 @@ class FirebaseSeeder {
             name: 'Pass Tout Accès - Mensuel',
             priceTnd: 80,
             durationMonths: 1,
-            benefits: ['Accès illimité à tous les cours collectifs', 'Accès plateau musculation & cardio', 'Bilan physique initial'],
+            benefits: ['Accès illimité à tous les cours collectifs', 'Accès plateau musculation & cardio', 'Option Coach de Salle (+20 TND/mois)'],
             category: PlanCategory.allInclusive,
+            hasCoachOption: true,
+            coachFeeTnd: 20,
           ),
           SubscriptionPlan(
             id: 'p2',
             name: 'Pass Tout Accès - Trimestriel',
             priceTnd: 220,
             durationMonths: 3,
-            benefits: ['Économisez 20 TND sur 3 mois', 'Accès prioritaire aux réservations', '1 séance bilan coach offerte'],
+            benefits: ['Économisez 20 TND sur 3 mois', 'Accès prioritaire aux réservations', '1 séance bilan coach offerte', 'Option Coach de Salle (+20 TND/mois)'],
             category: PlanCategory.allInclusive,
+            hasCoachOption: true,
+            coachFeeTnd: 20,
           ),
           SubscriptionPlan(
             id: 'p3',
-            name: 'Abonnement Mensuel - Pilates',
+            name: 'Abonnement Mensuel - Pilates Reformer',
             priceTnd: 90,
             durationMonths: 1,
-            benefits: ['Accès illimité aux cours Pilates Reformer & Matwork', 'Tapis & serviette fournis', 'Petits groupes (max 12)'],
+            benefits: ['Accès illimité aux cours Pilates Reformer & Matwork', 'Tapis & serviette fournis', 'Option Coach de Salle dédié (+25 TND/mois)'],
             category: PlanCategory.activitySpecific,
             targetActivity: 'Pilates',
+            hasCoachOption: true,
+            coachFeeTnd: 25,
           ),
           SubscriptionPlan(
             id: 'p4',
             name: 'Abonnement Mensuel - Musculation & Force',
             priceTnd: 75,
             durationMonths: 1,
-            benefits: ['Accès illimité plateau musculation & haltérophilie', 'Programme d\'entraînement personnalisé'],
+            benefits: ['Accès illimité plateau musculation & haltérophilie', 'Programme d\'entraînement personnalisé', 'Option Coach de Salle dédié (+20 TND/mois)'],
             category: PlanCategory.activitySpecific,
             targetActivity: 'Musculation',
+            hasCoachOption: true,
+            coachFeeTnd: 20,
           ),
           SubscriptionPlan(
             id: 'p5',
-            name: 'Abonnement Mensuel - CrossFit & HIIT',
+            name: 'Abonnement Mensuel - CrossFit & WOD',
             priceTnd: 100,
             durationMonths: 1,
-            benefits: ['Accès illimité Box CrossFit & WODs quotidiens', 'Suivi de performance athlétique'],
+            benefits: ['Accès illimité Box CrossFit & WODs quotidiens', 'Suivi de performance athlétique', 'Option Master Coach (+30 TND/mois)'],
             category: PlanCategory.activitySpecific,
             targetActivity: 'CrossFit',
+            hasCoachOption: true,
+            coachFeeTnd: 30,
           ),
           SubscriptionPlan(
             id: 'p6',
@@ -81,6 +93,8 @@ class FirebaseSeeder {
             benefits: ['Valable pour 1 séance de Pilates Reformer au choix'],
             category: PlanCategory.singleSeance,
             targetActivity: 'Pilates',
+            hasCoachOption: true,
+            coachFeeTnd: 10,
           ),
           SubscriptionPlan(
             id: 'p7',
@@ -90,23 +104,18 @@ class FirebaseSeeder {
             benefits: ['Valable pour 1 WOD CrossFit intense avec coach'],
             category: PlanCategory.singleSeance,
             targetActivity: 'CrossFit',
+            hasCoachOption: true,
+            coachFeeTnd: 15,
           ),
           SubscriptionPlan(
             id: 'p8',
-            name: 'Pass Séance Unique - Cours Général',
-            priceTnd: 15,
-            durationMonths: 1,
-            benefits: ['Valable pour 1 cours au choix (Cardio, Spinning, Yoga, Zumba, Boxe)'],
-            category: PlanCategory.singleSeance,
-            targetActivity: 'Cardio',
-          ),
-          SubscriptionPlan(
-            id: 'p9',
             name: 'Pass Tout Accès - Premium Annuel',
             priceTnd: 750,
             durationMonths: 12,
             benefits: ['Meilleure offre (-210 TND)', 'Serviette & boissons incluses', 'Invité gratuit 1x/mois', 'Accès VIP sauna & casier'],
             category: PlanCategory.allInclusive,
+            hasCoachOption: true,
+            coachFeeTnd: 0,
           ),
         ];
 

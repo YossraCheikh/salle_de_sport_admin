@@ -1,1 +1,5 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"sallegym-776db","appId":"1:1007745354506:android:d5e6e0e080ea08c5e348f3","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"sallegym-776db","configurations":{"android":"1:1007745354506:android:d5e6e0e080ea08c5e348f3","ios":"1:1007745354506:ios:cb3d5251e3bdc72ae348f3","macos":"1:1007745354506:ios:cb3d5251e3bdc72ae348f3","web":"1:1007745354506:web:9c22a600523abb94e348f3","windows":"1:1007745354506:web:2e637596087db171e348f3"}}}}}}
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}
