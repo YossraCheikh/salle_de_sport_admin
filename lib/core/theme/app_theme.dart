@@ -13,7 +13,6 @@ class AppTheme {
         primary: AppColors.lime,
         onPrimary: Colors.black,
         secondary: AppColors.lime,
-        background: AppColors.background,
         surface: AppColors.card,
         onSurface: AppColors.textPrimary,
         error: AppColors.danger,

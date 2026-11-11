@@ -183,7 +183,7 @@ class _SubscriptionsViewState extends State<SubscriptionsView> {
                             ),
                             Switch(
                               value: hasCoachOption,
-                              activeColor: AppColors.lime,
+                              activeThumbColor: AppColors.lime,
                               onChanged: (val) => setState(() => hasCoachOption = val),
                             ),
                           ],

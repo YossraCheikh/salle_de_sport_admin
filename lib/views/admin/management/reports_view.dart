@@ -42,7 +42,7 @@ class ReportsView extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.card,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.lime.withOpacity(0.5)),
+                    border: Border.all(color: AppColors.lime.withValues(alpha: 0.5)),
                   ),
                   child: Column(
                     children: [

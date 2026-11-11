@@ -105,11 +105,11 @@ class _SessionDetailSheetState extends State<SessionDetailSheet> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.hour_glass_empty_rounded, color: Colors.amber, size: 20),
-                    SizedBox(width: 10),
-                    Expanded(
+                    const Icon(Icons.hourglass_empty_rounded, color: Colors.amber, size: 20),
+                    const SizedBox(width: 10),
+                    const Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [

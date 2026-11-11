@@ -233,7 +233,7 @@ class _AddItemBottomSheetState extends State<AddItemBottomSheet> {
                         ),
                         const SizedBox(height: 6),
                         DropdownButtonFormField<String>(
-                          value: subOptions.contains(_selectedSubscription)
+                          initialValue: subOptions.contains(_selectedSubscription)
                               ? _selectedSubscription
                               : subOptions.first,
                           dropdownColor: AppColors.card,
@@ -439,7 +439,7 @@ class _AddItemBottomSheetState extends State<AddItemBottomSheet> {
                               const Text('Activité', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                               const SizedBox(height: 6),
                               DropdownButtonFormField<String>(
-                                value: _sessionType,
+                                initialValue: _sessionType,
                                 dropdownColor: AppColors.card,
                                 style: const TextStyle(color: Colors.white, fontSize: 13),
                                 decoration: InputDecoration(
@@ -462,7 +462,7 @@ class _AddItemBottomSheetState extends State<AddItemBottomSheet> {
                               const Text('Coach responsable', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                               const SizedBox(height: 6),
                               DropdownButtonFormField<String>(
-                                value: coachNames.contains(_sessionCoach) ? _sessionCoach : coachNames.first,
+                                initialValue: coachNames.contains(_sessionCoach) ? _sessionCoach : coachNames.first,
                                 dropdownColor: AppColors.card,
                                 style: const TextStyle(color: Colors.white, fontSize: 13),
                                 decoration: InputDecoration(
@@ -575,7 +575,7 @@ class _AddItemBottomSheetState extends State<AddItemBottomSheet> {
                               ),
                               Switch(
                                 value: _isPrivateCoaching,
-                                activeColor: AppColors.lime,
+                                activeThumbColor: AppColors.lime,
                                 onChanged: (val) => setState(() => _isPrivateCoaching = val),
                               ),
                             ],

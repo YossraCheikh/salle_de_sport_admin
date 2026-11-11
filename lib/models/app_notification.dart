@@ -27,7 +27,6 @@ class AppNotification {
       case NotificationTarget.coaches:
         return 'Coachs';
       case NotificationTarget.all:
-      default:
         return 'Tous les membres';
     }
   }

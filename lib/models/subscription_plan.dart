@@ -38,7 +38,6 @@ class SubscriptionPlan {
       case PlanCategory.singleSeance:
         return 'Ticket Séance Unique';
       case PlanCategory.allInclusive:
-      default:
         return 'Pass Tout Accès';
     }
   }

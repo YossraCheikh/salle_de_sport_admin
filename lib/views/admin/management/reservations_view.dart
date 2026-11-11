@@ -64,8 +64,8 @@ class ReservationsView extends StatelessWidget {
                                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                                   decoration: BoxDecoration(
                                                     color: isSingleSeance
-                                                        ? Colors.orange.withOpacity(0.15)
-                                                        : AppColors.lime.withOpacity(0.15),
+                                                        ? Colors.orange.withValues(alpha: 0.15)
+                                                        : AppColors.lime.withValues(alpha: 0.15),
                                                     borderRadius: BorderRadius.circular(4),
                                                   ),
                                                   child: Text(
@@ -84,7 +84,7 @@ class ReservationsView extends StatelessWidget {
                                                   Container(
                                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                                     decoration: BoxDecoration(
-                                                      color: Colors.amber.withOpacity(0.2),
+                                                      color: Colors.amber.withValues(alpha: 0.2),
                                                       borderRadius: BorderRadius.circular(4),
                                                     ),
                                                     child: const Text(
@@ -106,7 +106,7 @@ class ReservationsView extends StatelessWidget {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: AppColors.danger.withOpacity(0.15),
+                                            color: AppColors.danger.withValues(alpha: 0.15),
                                             borderRadius: BorderRadius.circular(8),
                                           ),
                                           child: const Text('Annulée', style: TextStyle(color: AppColors.danger, fontSize: 11, fontWeight: FontWeight.bold)),
