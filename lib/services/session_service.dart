@@ -13,68 +13,6 @@ class SessionService {
   FirebaseFirestore? get _db =>
       Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null;
 
-  final List<GymSession> _defaultSessions = [
-    GymSession(
-      id: 's1',
-      title: 'CrossFit Power 1-on-1',
-      type: 'CrossFit',
-      coachId: 'c3',
-      coachName: 'Karem Louati',
-      startAt: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 9, 0),
-      durationMin: 60,
-      maxParticipants: 15,
-      enrolledCount: 3,
-      singleSeancePriceTnd: 20,
-      isPrivateCoaching: true,
-      coachingFeeTnd: 20,
-    ),
-    GymSession(
-      id: 's2',
-      title: 'Spinning Express',
-      type: 'Spinning',
-      coachId: 'c4',
-      coachName: 'Sarra Gharbi',
-      startAt: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 11, 0),
-      durationMin: 45,
-      maxParticipants: 20,
-      enrolledCount: 2,
-      singleSeancePriceTnd: 15,
-    ),
-    GymSession(
-      id: 's3',
-      title: 'Pilates Reformer',
-      type: 'Pilates',
-      coachId: 'c2',
-      coachName: 'Yasmine Trabelsi',
-      startAt: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 14, 30),
-      durationMin: 60,
-      maxParticipants: 12,
-      enrolledCount: 2,
-      singleSeancePriceTnd: 18,
-    ),
-    GymSession(
-      id: 's4',
-      title: 'Musculation Hypertrophie',
-      type: 'Musculation',
-      coachId: 'c1',
-      coachName: 'Sami Ben Ali',
-      startAt: DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day, 17, 0),
-      durationMin: 75,
-      maxParticipants: 10,
-      enrolledCount: 1,
-      singleSeancePriceTnd: 15,
-    ),
-  ];
-
-  List<GymSession> get defaultSessions {
-    final now = DateTime.now();
-    return _defaultSessions.map((s) {
-      return s.copyWith(
-        startAt: DateTime(now.year, now.month, now.day, s.startAt.hour, s.startAt.minute),
-      );
-    }).toList();
-  }
-
   static void resetCache() {
     _cachedSessions = null;
   }
@@ -99,7 +37,7 @@ class SessionService {
 
       if (isSameDay) {
         if (existingStart.isBefore(endAt) && existingEnd.isAfter(startAt)) {
-          return s; // Chevauchement trouvé
+          return s;
         }
       }
     }
@@ -112,24 +50,12 @@ class SessionService {
     }
 
     return _db!.collection('sessions').snapshots().asyncMap((snapshot) async {
-      if (snapshot.docs.isNotEmpty) {
-        final sessions = snapshot.docs
-            .map((doc) => GymSession.fromMap(doc.data(), doc.id))
-            .toList();
-        _cachedSessions = sessions;
-        await _saveToDisk();
-        return sessions;
-      } else {
-        final defaultWithToday = defaultSessions;
-        for (final s in defaultWithToday) {
-          try {
-            await _db!.collection('sessions').doc(s.id).set(s.toMap());
-          } catch (_) {}
-        }
-        _cachedSessions = defaultWithToday;
-        await _saveToDisk();
-        return defaultWithToday;
-      }
+      final sessions = snapshot.docs
+          .map((doc) => GymSession.fromMap(doc.data(), doc.id))
+          .toList();
+      _cachedSessions = sessions;
+      await _saveToDisk();
+      return sessions;
     });
   }
 
@@ -189,7 +115,7 @@ class SessionService {
     if (diskList != null && diskList.isNotEmpty) {
       _cachedSessions = diskList.map((map) => GymSession.fromMap(map, map['id'] ?? '')).toList();
     } else {
-      _cachedSessions = defaultSessions;
+      _cachedSessions = [];
       await _saveToDisk();
     }
   }
@@ -233,71 +159,7 @@ class SessionService {
       return matching.map((r) => r.toMap()).toList();
     }
 
-    return [
-      {
-        'memberName': 'Mohamed Amine Ayari',
-        'memberEmail': 'amine.ayari@gmail.com',
-        'paymentType': 'singleSeance',
-        'pricePaidTnd': 20.0,
-        'bookingTime': DateTime.now().subtract(const Duration(hours: 3)).toIso8601String(),
-      },
-      {
-        'memberName': 'Sarra Mansouri',
-        'memberEmail': 'sarra.m@gmail.com',
-        'paymentType': 'subscription',
-        'pricePaidTnd': 80.0,
-        'bookingTime': DateTime.now().subtract(const Duration(hours: 2)).toIso8601String(),
-      },
-      {
-        'memberName': 'Nadia Bouaziz',
-        'memberEmail': 'nadia.b@gmail.com',
-        'paymentType': 'subscription',
-        'pricePaidTnd': 90.0,
-        'bookingTime': DateTime.now().subtract(const Duration(hours: 1)).toIso8601String(),
-      },
-    ];
-  }
-
-  Future<GymSession> addSession({
-    required String title,
-    required String type,
-    required String coachId,
-    required String coachName,
-    required DateTime startAt,
-    required int durationMin,
-    required int maxParticipants,
-    double? singleSeancePriceTnd,
-    bool isPrivateCoaching = false,
-    double? coachingFeeTnd,
-  }) async {
-    final newSession = GymSession(
-      id: 's_${DateTime.now().millisecondsSinceEpoch}',
-      title: title,
-      type: type,
-      coachId: coachId,
-      coachName: coachName,
-      startAt: startAt,
-      durationMin: durationMin,
-      maxParticipants: maxParticipants,
-      enrolledCount: 0,
-      singleSeancePriceTnd: singleSeancePriceTnd,
-      isPrivateCoaching: isPrivateCoaching,
-      coachingFeeTnd: coachingFeeTnd,
-    );
-
-    try {
-      if (_db != null) {
-        await _db!.collection('sessions').doc(newSession.id).set(newSession.toMap());
-      }
-    } catch (_) {}
-
-    if (_cachedSessions == null) {
-      await _loadAllSessions();
-    }
-    _cachedSessions!.add(newSession);
-    await _saveToDisk();
-
-    return newSession;
+    return [];
   }
 
   Future<void> approveSession(String sessionId) async {
@@ -344,6 +206,48 @@ class SessionService {
       );
       await _saveToDisk();
     }
+  }
+
+  Future<GymSession> addSession({
+    required String title,
+    required String type,
+    required String coachId,
+    required String coachName,
+    required DateTime startAt,
+    required int durationMin,
+    required int maxParticipants,
+    double? singleSeancePriceTnd,
+    bool isPrivateCoaching = false,
+    double? coachingFeeTnd,
+  }) async {
+    final newSession = GymSession(
+      id: 's_${DateTime.now().millisecondsSinceEpoch}',
+      title: title,
+      type: type,
+      coachId: coachId,
+      coachName: coachName,
+      startAt: startAt,
+      durationMin: durationMin,
+      maxParticipants: maxParticipants,
+      enrolledCount: 0,
+      singleSeancePriceTnd: singleSeancePriceTnd,
+      isPrivateCoaching: isPrivateCoaching,
+      coachingFeeTnd: coachingFeeTnd,
+    );
+
+    try {
+      if (_db != null) {
+        await _db!.collection('sessions').doc(newSession.id).set(newSession.toMap());
+      }
+    } catch (_) {}
+
+    if (_cachedSessions == null) {
+      await _loadAllSessions();
+    }
+    _cachedSessions!.add(newSession);
+    await _saveToDisk();
+
+    return newSession;
   }
 
   Future<void> updateSession(GymSession updated) async {

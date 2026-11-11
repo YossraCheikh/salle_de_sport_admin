@@ -11,51 +11,6 @@ class CoachService {
   FirebaseFirestore? get _db =>
       Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null;
 
-  final List<Coach> _defaultCoaches = [
-    Coach(
-      id: 'c1',
-      name: 'Sami Ben Ali',
-      email: 'sami.benali@gym.tn',
-      phone: '+216 20 123 456',
-      bio: 'Expert en Musculation et Bodybuilding avec 8 ans d\'expérience.',
-      specialties: ['Musculation', 'Bodybuilding', 'Prise de masse'],
-      activeSessionsCount: 12,
-      type: CoachType.gym,
-    ),
-    Coach(
-      id: 'c2',
-      name: 'Yasmine Trabelsi',
-      email: 'yasmine.trabelsi@gym.tn',
-      phone: '+216 22 987 654',
-      bio: 'Instructrice certifiée de Yoga et Pilates.',
-      specialties: ['Yoga', 'Pilates', 'Souplesse'],
-      activeSessionsCount: 8,
-      type: CoachType.gym,
-    ),
-    Coach(
-      id: 'c3',
-      name: 'Karem Louati',
-      email: 'karem.louati@gym.tn',
-      phone: '+216 55 444 333',
-      bio: 'Spécialiste CrossFit et préparation physique haute intensité.',
-      specialties: ['CrossFit', 'HIIT', 'Cardio'],
-      activeSessionsCount: 15,
-      type: CoachType.private,
-    ),
-    Coach(
-      id: 'c4',
-      name: 'Sarra Gharbi',
-      email: 'sarra.gharbi@gym.tn',
-      phone: '+216 98 111 222',
-      bio: 'Coach de Spinning et d\'Aérobic dynamique.',
-      specialties: ['Spinning', 'Aérobic', 'Perte de poids'],
-      activeSessionsCount: 10,
-      type: CoachType.gym,
-    ),
-  ];
-
-  List<Coach> get defaultCoaches => List.from(_defaultCoaches);
-
   static void resetCache() {
     _cachedCoaches = null;
   }
@@ -71,13 +26,9 @@ class CoachService {
           .map((doc) => Coach.fromMap(doc.data(), doc.id))
           .toList();
 
-      if (list.isNotEmpty) {
-        _cachedCoaches = list;
-        await _saveToDisk();
-        return list;
-      } else {
-        return await fetchCoaches();
-      }
+      _cachedCoaches = list;
+      await _saveToDisk();
+      return list;
     });
   }
 
@@ -94,11 +45,9 @@ class CoachService {
             .map((doc) => Coach.fromMap(doc.data(), doc.id))
             .toList();
 
-        if (list.isNotEmpty) {
-          _cachedCoaches = list;
-          await _saveToDisk();
-          return List.from(_cachedCoaches!);
-        }
+        _cachedCoaches = list;
+        await _saveToDisk();
+        return list;
       }
     } catch (e) {
       if (kDebugMode) print('CoachService Firestore fallback: $e');
@@ -107,12 +56,10 @@ class CoachService {
     final diskList = await LocalStorageService.loadJsonList(_storageKey);
     if (diskList != null && diskList.isNotEmpty) {
       _cachedCoaches = diskList.map((map) => Coach.fromMap(map, map['id'] ?? '')).toList();
-    } else {
-      _cachedCoaches = List.from(_defaultCoaches);
-      await _saveToDisk();
+      return List.from(_cachedCoaches!);
     }
 
-    return List.from(_cachedCoaches!);
+    return [];
   }
 
   Future<void> _saveToDisk() async {

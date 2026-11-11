@@ -11,39 +11,6 @@ class MemberService {
   FirebaseFirestore? get _db =>
       Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null;
 
-  final List<Member> _defaultMembers = [
-    Member(
-      id: 'm1',
-      name: 'Mohamed Amine Ayari',
-      email: 'amine.ayari@gmail.com',
-      phone: '+216 21 001 002',
-      status: MemberStatus.active,
-      subscriptionName: 'Pass Tout Accès - Trimestriel',
-      createdAt: DateTime.now().subtract(const Duration(days: 45)),
-    ),
-    Member(
-      id: 'm2',
-      name: 'Sarra Mansouri',
-      email: 'sarra.m@gmail.com',
-      phone: '+216 52 334 455',
-      status: MemberStatus.active,
-      subscriptionName: 'Pass Tout Accès - Premium Annuel',
-      createdAt: DateTime.now().subtract(const Duration(days: 90)),
-    ),
-    Member(
-      id: 'm4',
-      name: 'Ines Bouchoucha',
-      email: 'ines.b@gmail.com',
-      phone: '+216 26 112 233',
-      status: MemberStatus.toVerify,
-      subscriptionName: 'Abonnement Mensuel - Pilates Reformer',
-      createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      isSubscriptionApproved: false,
-    ),
-  ];
-
-  List<Member> get defaultMembers => List.from(_defaultMembers);
-
   static void resetCache() {
     _cachedMembers = null;
   }
@@ -62,13 +29,9 @@ class MemberService {
           .map((doc) => Member.fromMap(doc.data(), doc.id))
           .toList();
 
-      if (list.isNotEmpty) {
-        _cachedMembers = list;
-        await _saveToDisk();
-        return list;
-      } else {
-        return await fetchMembers();
-      }
+      _cachedMembers = list;
+      await _saveToDisk();
+      return list;
     });
   }
 
@@ -88,11 +51,9 @@ class MemberService {
             .map((doc) => Member.fromMap(doc.data(), doc.id))
             .toList();
 
-        if (list.isNotEmpty) {
-          _cachedMembers = list;
-          await _saveToDisk();
-          return List.from(_cachedMembers!);
-        }
+        _cachedMembers = list;
+        await _saveToDisk();
+        return list;
       }
     } catch (e) {
       if (kDebugMode) print('MemberService Firestore fallback: $e');
@@ -101,12 +62,10 @@ class MemberService {
     final diskList = await LocalStorageService.loadJsonList(_storageKey);
     if (diskList != null && diskList.isNotEmpty) {
       _cachedMembers = diskList.map((map) => Member.fromMap(map, map['id'] ?? '')).toList();
-    } else {
-      _cachedMembers = List.from(_defaultMembers);
-      await _saveToDisk();
+      return List.from(_cachedMembers!);
     }
 
-    return List.from(_cachedMembers!);
+    return [];
   }
 
   Future<void> _saveToDisk() async {
