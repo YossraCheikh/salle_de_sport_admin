@@ -18,7 +18,7 @@ class MemberService {
       email: 'amine.ayari@gmail.com',
       phone: '+216 21 001 002',
       status: MemberStatus.active,
-      subscriptionName: 'Trimestriel',
+      subscriptionName: 'Pass Tout Accès - Trimestriel',
       createdAt: DateTime.now().subtract(const Duration(days: 45)),
     ),
     Member(
@@ -27,7 +27,7 @@ class MemberService {
       email: 'sarra.m@gmail.com',
       phone: '+216 52 334 455',
       status: MemberStatus.active,
-      subscriptionName: 'Premium Annuel',
+      subscriptionName: 'Pass Tout Accès - Premium Annuel',
       createdAt: DateTime.now().subtract(const Duration(days: 90)),
     ),
     Member(
@@ -36,7 +36,7 @@ class MemberService {
       email: 'ahmed.j@yahoo.fr',
       phone: '+216 97 889 900',
       status: MemberStatus.expiring,
-      subscriptionName: 'Mensuel',
+      subscriptionName: 'Pass Tout Accès - Mensuel',
       createdAt: DateTime.now().subtract(const Duration(days: 25)),
     ),
     Member(
@@ -45,26 +45,9 @@ class MemberService {
       email: 'ines.b@gmail.com',
       phone: '+216 26 112 233',
       status: MemberStatus.toVerify,
-      subscriptionName: 'Mensuel - Pilates',
+      subscriptionName: 'Abonnement Mensuel - Pilates Reformer',
       createdAt: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    Member(
-      id: 'm5',
-      name: 'Billal Hammami',
-      email: 'billal.h@outlook.com',
-      phone: '+216 50 667 788',
-      status: MemberStatus.inactive,
-      subscriptionName: 'Sans abonnement',
-      createdAt: DateTime.now().subtract(const Duration(days: 120)),
-    ),
-    Member(
-      id: 'm6',
-      name: 'Nadia Bouaziz',
-      email: 'nadia.b@gmail.com',
-      phone: '+216 93 445 566',
-      status: MemberStatus.active,
-      subscriptionName: 'Mensuel',
-      createdAt: DateTime.now().subtract(const Duration(days: 60)),
+      isSubscriptionApproved: false,
     ),
   ];
 
@@ -80,13 +63,17 @@ class MemberService {
     }
 
     return _db!.collection('members').snapshots().asyncMap((snapshot) async {
-      if (snapshot.docs.isNotEmpty) {
-        final list = snapshot.docs
-            .map((doc) => Member.fromMap(doc.data(), doc.id))
-            .toList();
-        _cachedMembers = list;
+      final membersFromCol = snapshot.docs
+          .map((doc) => Member.fromMap(doc.data(), doc.id))
+          .toList();
+
+      final realUsersFromFirestore = await _fetchRealMembersFromUsersCollection();
+      final merged = _mergeMembers(membersFromCol, realUsersFromFirestore);
+
+      if (merged.isNotEmpty) {
+        _cachedMembers = merged;
         await _saveToDisk();
-        return list;
+        return merged;
       } else {
         for (final m in _defaultMembers) {
           try {
@@ -100,6 +87,48 @@ class MemberService {
     });
   }
 
+  Future<List<Member>> _fetchRealMembersFromUsersCollection() async {
+    if (_db == null) return [];
+    try {
+      final snap = await _db!.collection('users').get();
+      final list = <Member>[];
+      for (final doc in snap.docs) {
+        final data = doc.data();
+        final role = data['role'] ?? 'member';
+        if (role == 'member' || role == 'adherant' || role == 'user') {
+          list.add(Member(
+            id: doc.id,
+            name: data['name'] ?? 'Adhérent',
+            email: data['email'] ?? '',
+            phone: data['phone'] ?? '',
+            status: Member._parseStatus(data['status'] ?? 'toVerify'),
+            subscriptionName: data['subscriptionName'] ?? 'Abonnement Mensuel - Musculation & Force',
+            createdAt: data['createdAt'] != null
+                ? DateTime.tryParse(data['createdAt'].toString()) ?? DateTime.now()
+                : DateTime.now(),
+            isSubscriptionApproved: data['isSubscriptionApproved'] ?? (data['status'] == 'active'),
+          ));
+        }
+      }
+      return list;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  List<Member> _mergeMembers(List<Member> colList, List<Member> usersList) {
+    final map = <String, Member>{};
+    for (final m in colList) {
+      map[m.id] = m;
+    }
+    for (final u in usersList) {
+      if (!map.containsKey(u.id)) {
+        map[u.id] = u;
+      }
+    }
+    return map.values.toList();
+  }
+
   Future<List<Member>> fetchMembers() async {
     if (_cachedMembers != null && _cachedMembers!.isNotEmpty) {
       return List.from(_cachedMembers!);
@@ -108,10 +137,15 @@ class MemberService {
     try {
       if (_db != null) {
         final snapshot = await _db!.collection('members').get();
-        if (snapshot.docs.isNotEmpty) {
-          _cachedMembers = snapshot.docs
-              .map((doc) => Member.fromMap(doc.data(), doc.id))
-              .toList();
+        final membersFromCol = snapshot.docs
+            .map((doc) => Member.fromMap(doc.data(), doc.id))
+            .toList();
+
+        final realUsers = await _fetchRealMembersFromUsersCollection();
+        final merged = _mergeMembers(membersFromCol, realUsers);
+
+        if (merged.isNotEmpty) {
+          _cachedMembers = merged;
           await _saveToDisk();
           return List.from(_cachedMembers!);
         }
@@ -178,6 +212,7 @@ class MemberService {
       status: status,
       subscriptionName: subscriptionName,
       createdAt: DateTime.now(),
+      isSubscriptionApproved: true,
     );
 
     try {
@@ -195,6 +230,39 @@ class MemberService {
     await _saveToDisk();
 
     return newMember;
+  }
+
+  Future<void> approveMemberSubscription(String memberId, String approvedPlanName) async {
+    try {
+      if (_db != null) {
+        await _db!.collection('members').doc(memberId).set({
+          'status': 'active',
+          'subscriptionName': approvedPlanName,
+          'isSubscriptionApproved': true,
+        }, SetOptions(merge: true));
+
+        await _db!.collection('users').doc(memberId).set({
+          'status': 'active',
+          'subscriptionName': approvedPlanName,
+          'isSubscriptionApproved': true,
+        }, SetOptions(merge: true));
+      }
+    } catch (e) {
+      if (kDebugMode) print('approveMemberSubscription error: $e');
+    }
+
+    if (_cachedMembers == null) {
+      await fetchMembers();
+    }
+    final index = _cachedMembers!.indexWhere((m) => m.id == memberId);
+    if (index != -1) {
+      _cachedMembers![index] = _cachedMembers![index].copyWith(
+        status: MemberStatus.active,
+        subscriptionName: approvedPlanName,
+        isSubscriptionApproved: true,
+      );
+      await _saveToDisk();
+    }
   }
 
   Future<void> updateMember(Member updated) async {

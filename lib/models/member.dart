@@ -9,6 +9,7 @@ class Member {
   final MemberStatus status;
   final String subscriptionName;
   final DateTime createdAt;
+  final bool isSubscriptionApproved; // True si l'admin a validé l'abonnement
 
   Member({
     required this.id,
@@ -19,6 +20,7 @@ class Member {
     required this.status,
     required this.subscriptionName,
     required this.createdAt,
+    this.isSubscriptionApproved = true,
   });
 
   String get initials {
@@ -43,6 +45,7 @@ class Member {
       createdAt: map['createdAt'] != null
           ? DateTime.parse(map['createdAt'])
           : DateTime.now(),
+      isSubscriptionApproved: map['isSubscriptionApproved'] ?? (map['status'] != 'toVerify'),
     );
   }
 
@@ -55,6 +58,7 @@ class Member {
       'status': status.name,
       'subscriptionName': subscriptionName,
       'createdAt': createdAt.toIso8601String(),
+      'isSubscriptionApproved': isSubscriptionApproved,
     };
   }
 
@@ -67,6 +71,7 @@ class Member {
     MemberStatus? status,
     String? subscriptionName,
     DateTime? createdAt,
+    bool? isSubscriptionApproved,
   }) {
     return Member(
       id: id ?? this.id,
@@ -77,6 +82,7 @@ class Member {
       status: status ?? this.status,
       subscriptionName: subscriptionName ?? this.subscriptionName,
       createdAt: createdAt ?? this.createdAt,
+      isSubscriptionApproved: isSubscriptionApproved ?? this.isSubscriptionApproved,
     );
   }
 

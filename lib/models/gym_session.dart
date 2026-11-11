@@ -13,6 +13,8 @@ class GymSession {
   final double? singleSeancePriceTnd;
   final bool isPrivateCoaching;
   final double? coachingFeeTnd;
+  final bool isApproved; // Validé par l'admin (true) ou en attente (false)
+  final String status; // 'approved', 'pendingApproval', 'rejected'
 
   GymSession({
     required this.id,
@@ -27,6 +29,8 @@ class GymSession {
     this.singleSeancePriceTnd,
     this.isPrivateCoaching = false,
     this.coachingFeeTnd,
+    this.isApproved = true,
+    this.status = 'approved',
   });
 
   String get formattedTime => DateFormat('HH:mm').format(startAt);
@@ -59,6 +63,8 @@ class GymSession {
       coachingFeeTnd: map['coachingFeeTnd'] != null
           ? (map['coachingFeeTnd'] as num).toDouble()
           : null,
+      isApproved: map['isApproved'] ?? true,
+      status: map['status'] ?? 'approved',
     );
   }
 
@@ -75,6 +81,8 @@ class GymSession {
       'singleSeancePriceTnd': singleSeancePriceTnd,
       'isPrivateCoaching': isPrivateCoaching,
       'coachingFeeTnd': coachingFeeTnd,
+      'isApproved': isApproved,
+      'status': status,
     };
   }
 
@@ -91,6 +99,8 @@ class GymSession {
     double? singleSeancePriceTnd,
     bool? isPrivateCoaching,
     double? coachingFeeTnd,
+    bool? isApproved,
+    String? status,
   }) {
     return GymSession(
       id: id ?? this.id,
@@ -105,6 +115,8 @@ class GymSession {
       singleSeancePriceTnd: singleSeancePriceTnd ?? this.singleSeancePriceTnd,
       isPrivateCoaching: isPrivateCoaching ?? this.isPrivateCoaching,
       coachingFeeTnd: coachingFeeTnd ?? this.coachingFeeTnd,
+      isApproved: isApproved ?? this.isApproved,
+      status: status ?? this.status,
     );
   }
 }

@@ -113,6 +113,25 @@ class MemberController extends ChangeNotifier {
     }
   }
 
+  Future<void> approveMemberSubscription(String memberId, String planName) async {
+    await _memberService.approveMemberSubscription(memberId, planName);
+    final index = _members.indexWhere((m) => m.id == memberId);
+    if (index != -1) {
+      final old = _members[index];
+      _members[index] = old.copyWith(
+        status: MemberStatus.active,
+        subscriptionName: planName,
+        isSubscriptionApproved: true,
+      );
+      notifyListeners();
+    }
+    await NotificationService().createNotification(
+      title: '✅ Abonnement validé par l\'Admin',
+      body: 'L\'abonnement "$planName" a été validé par l\'administration.',
+      target: NotificationTarget.all,
+    );
+  }
+
   Future<void> updateMember(Member updated) async {
     final oldIndex = _members.indexWhere((m) => m.id == updated.id);
     final oldSub = oldIndex != -1 ? _members[oldIndex].subscriptionName : '';

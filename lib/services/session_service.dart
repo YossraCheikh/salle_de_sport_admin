@@ -300,6 +300,52 @@ class SessionService {
     return newSession;
   }
 
+  Future<void> approveSession(String sessionId) async {
+    try {
+      if (_db != null) {
+        await _db!.collection('sessions').doc(sessionId).set({
+          'isApproved': true,
+          'status': 'approved',
+        }, SetOptions(merge: true));
+      }
+    } catch (_) {}
+
+    if (_cachedSessions == null) {
+      await _loadAllSessions();
+    }
+    final index = _cachedSessions!.indexWhere((s) => s.id == sessionId);
+    if (index != -1) {
+      _cachedSessions![index] = _cachedSessions![index].copyWith(
+        isApproved: true,
+        status: 'approved',
+      );
+      await _saveToDisk();
+    }
+  }
+
+  Future<void> rejectSession(String sessionId) async {
+    try {
+      if (_db != null) {
+        await _db!.collection('sessions').doc(sessionId).set({
+          'isApproved': false,
+          'status': 'rejected',
+        }, SetOptions(merge: true));
+      }
+    } catch (_) {}
+
+    if (_cachedSessions == null) {
+      await _loadAllSessions();
+    }
+    final index = _cachedSessions!.indexWhere((s) => s.id == sessionId);
+    if (index != -1) {
+      _cachedSessions![index] = _cachedSessions![index].copyWith(
+        isApproved: false,
+        status: 'rejected',
+      );
+      await _saveToDisk();
+    }
+  }
+
   Future<void> updateSession(GymSession updated) async {
     try {
       if (_db != null) {

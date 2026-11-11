@@ -145,6 +145,29 @@ class SessionController extends ChangeNotifier {
     }
   }
 
+  Future<void> approveSession(String sessionId) async {
+    await _sessionService.approveSession(sessionId);
+    final index = _sessions.indexWhere((s) => s.id == sessionId);
+    if (index != -1) {
+      _sessions[index] = _sessions[index].copyWith(isApproved: true, status: 'approved');
+      notifyListeners();
+    }
+    await NotificationService().createNotification(
+      title: '✅ Séance validée & publiée par l\'Admin',
+      body: 'La séance "${index != -1 ? _sessions[index].title : "cours"}" a été validée par l\'administration.',
+      target: NotificationTarget.all,
+    );
+  }
+
+  Future<void> rejectSession(String sessionId) async {
+    await _sessionService.rejectSession(sessionId);
+    final index = _sessions.indexWhere((s) => s.id == sessionId);
+    if (index != -1) {
+      _sessions[index] = _sessions[index].copyWith(isApproved: false, status: 'rejected');
+      notifyListeners();
+    }
+  }
+
   Future<void> updateSession(GymSession updated) async {
     await _sessionService.updateSession(updated);
     final index = _sessions.indexWhere((s) => s.id == updated.id);

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../../controllers/session_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../models/gym_session.dart';
@@ -93,13 +95,70 @@ class _SessionDetailSheetState extends State<SessionDetailSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Bannière de Modération si séance proposée par un Coach
+            if (!_currentSession.isApproved || _currentSession.status == 'pendingApproval') ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.hour_glass_empty_rounded, color: Colors.amber, size: 20),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Séance proposée par le Coach', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text('En attente de validation et publication par l\'administrateur.', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.lime,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.verified_rounded, size: 20),
+                  label: const Text('Valider & Publier la Séance', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  onPressed: () {
+                    final updated = _currentSession.copyWith(isApproved: true, status: 'approved');
+                    setState(() {
+                      _currentSession = updated;
+                    });
+                    context.read<SessionController>().approveSession(updated.id);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Séance ${updated.title} validée et publiée !'),
+                        backgroundColor: AppColors.lime,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.lime.withOpacity(0.15),
+                    color: AppColors.lime.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
@@ -172,9 +231,9 @@ class _SessionDetailSheetState extends State<SessionDetailSheet> {
             ),
 
             const SizedBox(height: 20),
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
+              children: [
                 Text(
                   'Adhérents inscrits à ce cours',
                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
@@ -227,7 +286,7 @@ class _SessionDetailSheetState extends State<SessionDetailSheet> {
                         children: [
                           CircleAvatar(
                             radius: 16,
-                            backgroundColor: AppColors.purple.withOpacity(0.25),
+                            backgroundColor: AppColors.purple.withValues(alpha: 0.25),
                             child: Text(initialChar, style: const TextStyle(color: AppColors.purple, fontSize: 11, fontWeight: FontWeight.bold)),
                           ),
                           const SizedBox(width: 10),
@@ -244,7 +303,7 @@ class _SessionDetailSheetState extends State<SessionDetailSheet> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: isSingleSeance ? Colors.orange.withOpacity(0.15) : AppColors.lime.withOpacity(0.15),
+                              color: isSingleSeance ? Colors.orange.withValues(alpha: 0.15) : AppColors.lime.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(

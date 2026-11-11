@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../../controllers/management_controller.dart';
+import '../../../../controllers/member_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/status_badge.dart';
@@ -41,9 +42,9 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
       planNames.addAll([
         'Pass Tout Accès - Mensuel',
         'Pass Tout Accès - Trimestriel',
-        'Abonnement Mensuel - Pilates',
+        'Abonnement Mensuel - Pilates Reformer',
         'Abonnement Mensuel - Musculation & Force',
-        'Abonnement Mensuel - CrossFit & HIIT',
+        'Abonnement Mensuel - CrossFit & WOD',
         'Pass Tout Accès - Premium Annuel',
       ]);
     }
@@ -67,7 +68,7 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
               const Text('Sélectionnez la nouvelle offre :', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
               const SizedBox(height: 6),
               DropdownButtonFormField<String>(
-                value: selectedPlan,
+                initialValue: selectedPlan,
                 dropdownColor: AppColors.card,
                 style: const TextStyle(color: AppColors.lime, fontSize: 13, fontWeight: FontWeight.bold),
                 decoration: InputDecoration(
@@ -114,11 +115,13 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
               final updated = _currentMember.copyWith(
                 subscriptionName: selectedPlan,
                 status: MemberStatus.active,
+                isSubscriptionApproved: true,
               );
               setState(() {
                 _currentMember = updated;
               });
               widget.onUpdateStatus(updated);
+              context.read<MemberController>().approveMemberSubscription(updated.id, selectedPlan);
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -157,7 +160,7 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
               AppTextField(label: 'Téléphone', hintText: '', controller: phoneCtrl),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
-                value: selectedSub,
+                initialValue: selectedSub,
                 dropdownColor: AppColors.card,
                 style: const TextStyle(color: Colors.white, fontSize: 13),
                 decoration: InputDecoration(
@@ -167,7 +170,7 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
                 items: const [
                   DropdownMenuItem(value: 'Pass Tout Accès - Mensuel', child: Text('Pass Tout Accès - Mensuel')),
                   DropdownMenuItem(value: 'Pass Tout Accès - Trimestriel', child: Text('Pass Tout Accès - Trimestriel')),
-                  DropdownMenuItem(value: 'Abonnement Mensuel - Pilates', child: Text('Abonnement Mensuel - Pilates')),
+                  DropdownMenuItem(value: 'Abonnement Mensuel - Pilates Reformer', child: Text('Abonnement Mensuel - Pilates')),
                   DropdownMenuItem(value: 'Abonnement Mensuel - Musculation & Force', child: Text('Abonnement Mensuel - Musculation')),
                   DropdownMenuItem(value: 'Pass Tout Accès - Premium Annuel', child: Text('Premium Annuel')),
                   DropdownMenuItem(value: 'Sans abonnement', child: Text('Sans abonnement')),
@@ -220,6 +223,66 @@ class _MemberDetailSheetState extends State<MemberDetailSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Bannière de Modération si Demande d'Abonnement en attente
+            if (!_currentMember.isSubscriptionApproved || _currentMember.status == MemberStatus.toVerify) ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.4)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.mark_email_unread_rounded, color: Colors.amber, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Demande d\'Abonnement à Valider', style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text('Demande pour "${_currentMember.subscriptionName}". Validez l\'accès pour activer le profil.', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.lime,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.check_circle_rounded, size: 20),
+                  label: const Text('Valider L\'Abonnement (Activer)', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  onPressed: () {
+                    final updated = _currentMember.copyWith(
+                      status: MemberStatus.active,
+                      isSubscriptionApproved: true,
+                    );
+                    setState(() {
+                      _currentMember = updated;
+                    });
+                    context.read<MemberController>().approveMemberSubscription(updated.id, updated.subscriptionName);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Abonnement de ${updated.name} validé et activé !'),
+                        backgroundColor: AppColors.lime,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             // En-tête
             Row(
               children: [
