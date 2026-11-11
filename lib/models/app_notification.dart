@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 enum NotificationTarget { all, members, coaches }
 enum NotificationStatus { sent, planned }
 
@@ -40,13 +42,18 @@ class AppNotification {
           : map['target'] == 'members'
               ? NotificationTarget.members
               : NotificationTarget.all,
-      scheduledAt: map['scheduledAt'] != null
-          ? DateTime.parse(map['scheduledAt'])
-          : DateTime.now(),
+      scheduledAt: _parseDateTime(map['scheduledAt']),
       status: map['status'] == 'planned'
           ? NotificationStatus.planned
           : NotificationStatus.sent,
     );
+  }
+
+  static DateTime _parseDateTime(dynamic val) {
+    if (val == null) return DateTime.now();
+    if (val is Timestamp) return val.toDate();
+    if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
+    return DateTime.now();
   }
 
   Map<String, dynamic> toMap() {

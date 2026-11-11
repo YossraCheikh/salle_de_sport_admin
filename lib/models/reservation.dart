@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 enum ReservationStatus { confirmed, cancelled }
 
 class Reservation {
@@ -40,9 +42,7 @@ class Reservation {
       memberId: map['memberId'] ?? '',
       memberName: map['memberName'] ?? '',
       memberEmail: map['memberEmail'] ?? '',
-      bookingTime: map['bookingTime'] != null
-          ? DateTime.parse(map['bookingTime'])
-          : DateTime.now(),
+      bookingTime: _parseDateTime(map['bookingTime']),
       status: map['status'] == 'cancelled'
           ? ReservationStatus.cancelled
           : ReservationStatus.confirmed,
@@ -55,6 +55,13 @@ class Reservation {
           ? (map['coachingFeeTnd'] as num).toDouble()
           : null,
     );
+  }
+
+  static DateTime _parseDateTime(dynamic val) {
+    if (val == null) return DateTime.now();
+    if (val is Timestamp) return val.toDate();
+    if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
+    return DateTime.now();
   }
 
   Map<String, dynamic> toMap() {

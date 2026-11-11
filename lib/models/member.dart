@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 enum MemberStatus { active, expiring, toVerify, inactive }
 
 class Member {
@@ -9,7 +11,7 @@ class Member {
   final MemberStatus status;
   final String subscriptionName;
   final DateTime createdAt;
-  final bool isSubscriptionApproved; // True si l'admin a validé l'abonnement
+  final bool isSubscriptionApproved;
 
   Member({
     required this.id,
@@ -42,11 +44,16 @@ class Member {
       photoUrl: map['photoUrl'],
       status: _parseStatus(map['status']),
       subscriptionName: map['subscriptionName'] ?? 'Sans abonnement',
-      createdAt: map['createdAt'] != null
-          ? DateTime.parse(map['createdAt'])
-          : DateTime.now(),
+      createdAt: _parseDateTime(map['createdAt']),
       isSubscriptionApproved: map['isSubscriptionApproved'] ?? (map['status'] != 'toVerify'),
     );
+  }
+
+  static DateTime _parseDateTime(dynamic val) {
+    if (val == null) return DateTime.now();
+    if (val is Timestamp) return val.toDate();
+    if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
+    return DateTime.now();
   }
 
   Map<String, dynamic> toMap() {

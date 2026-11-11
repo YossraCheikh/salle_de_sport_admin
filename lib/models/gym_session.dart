@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 class GymSession {
@@ -50,9 +51,7 @@ class GymSession {
       type: map['type'] ?? 'Musculation',
       coachId: map['coachId'] ?? '',
       coachName: map['coachName'] ?? 'Coach non assigné',
-      startAt: map['startAt'] != null
-          ? DateTime.parse(map['startAt'])
-          : DateTime.now(),
+      startAt: _parseDateTime(map['startAt']),
       durationMin: map['durationMin'] ?? 45,
       maxParticipants: map['maxParticipants'] ?? 15,
       enrolledCount: map['enrolledCount'] ?? 0,
@@ -66,6 +65,13 @@ class GymSession {
       isApproved: map['isApproved'] ?? true,
       status: map['status'] ?? 'approved',
     );
+  }
+
+  static DateTime _parseDateTime(dynamic val) {
+    if (val == null) return DateTime.now();
+    if (val is Timestamp) return val.toDate();
+    if (val is String) return DateTime.tryParse(val) ?? DateTime.now();
+    return DateTime.now();
   }
 
   Map<String, dynamic> toMap() {
