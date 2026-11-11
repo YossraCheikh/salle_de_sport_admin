@@ -65,23 +65,18 @@ class CoachService {
       return Stream.fromFuture(fetchCoaches());
     }
 
-    return _db!.collection('coaches').snapshots().asyncMap((snapshot) async {
-      if (snapshot.docs.isNotEmpty) {
-        final list = snapshot.docs
-            .map((doc) => Coach.fromMap(doc.data(), doc.id))
-            .toList();
+    return _db!.collection('users').snapshots().asyncMap((snapshot) async {
+      final list = snapshot.docs
+          .where((doc) => (doc.data()['role'] ?? '').toString().toLowerCase() == 'coach')
+          .map((doc) => Coach.fromMap(doc.data(), doc.id))
+          .toList();
+
+      if (list.isNotEmpty) {
         _cachedCoaches = list;
         await _saveToDisk();
         return list;
       } else {
-        for (final c in _defaultCoaches) {
-          try {
-            await _db!.collection('coaches').doc(c.id).set(c.toMap());
-          } catch (_) {}
-        }
-        _cachedCoaches = List.from(_defaultCoaches);
-        await _saveToDisk();
-        return List.from(_defaultCoaches);
+        return await fetchCoaches();
       }
     });
   }
@@ -93,11 +88,14 @@ class CoachService {
 
     try {
       if (_db != null) {
-        final snapshot = await _db!.collection('coaches').get();
-        if (snapshot.docs.isNotEmpty) {
-          _cachedCoaches = snapshot.docs
-              .map((doc) => Coach.fromMap(doc.data(), doc.id))
-              .toList();
+        final snapshot = await _db!.collection('users').get();
+        final list = snapshot.docs
+            .where((doc) => (doc.data()['role'] ?? '').toString().toLowerCase() == 'coach')
+            .map((doc) => Coach.fromMap(doc.data(), doc.id))
+            .toList();
+
+        if (list.isNotEmpty) {
+          _cachedCoaches = list;
           await _saveToDisk();
           return List.from(_cachedCoaches!);
         }
@@ -170,7 +168,9 @@ class CoachService {
 
     try {
       if (_db != null) {
-        await _db!.collection('coaches').doc(newCoach.id).set(newCoach.toMap());
+        final data = newCoach.toMap();
+        data['role'] = 'coach';
+        await _db!.collection('users').doc(newCoach.id).set(data);
       }
     } catch (_) {}
 
@@ -186,7 +186,9 @@ class CoachService {
   Future<void> updateCoach(Coach updated) async {
     try {
       if (_db != null) {
-        await _db!.collection('coaches').doc(updated.id).update(updated.toMap());
+        final data = updated.toMap();
+        data['role'] = 'coach';
+        await _db!.collection('users').doc(updated.id).set(data, SetOptions(merge: true));
       }
     } catch (_) {}
 
@@ -203,7 +205,7 @@ class CoachService {
   Future<void> deleteCoach(String coachId) async {
     try {
       if (_db != null) {
-        await _db!.collection('coaches').doc(coachId).delete();
+        await _db!.collection('users').doc(coachId).delete();
       }
     } catch (_) {}
 

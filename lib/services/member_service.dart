@@ -31,15 +31,6 @@ class MemberService {
       createdAt: DateTime.now().subtract(const Duration(days: 90)),
     ),
     Member(
-      id: 'm3',
-      name: 'Ahmed Jaziri',
-      email: 'ahmed.j@yahoo.fr',
-      phone: '+216 97 889 900',
-      status: MemberStatus.expiring,
-      subscriptionName: 'Pass Tout Accès - Mensuel',
-      createdAt: DateTime.now().subtract(const Duration(days: 25)),
-    ),
-    Member(
       id: 'm4',
       name: 'Ines Bouchoucha',
       email: 'ines.b@gmail.com',
@@ -62,23 +53,21 @@ class MemberService {
       return Stream.fromFuture(fetchMembers());
     }
 
-    return _db!.collection('members').snapshots().asyncMap((snapshot) async {
-      if (snapshot.docs.isNotEmpty) {
-        final list = snapshot.docs
-            .map((doc) => Member.fromMap(doc.data(), doc.id))
-            .toList();
+    return _db!.collection('users').snapshots().asyncMap((snapshot) async {
+      final list = snapshot.docs
+          .where((doc) {
+            final r = (doc.data()['role'] ?? '').toString().toLowerCase();
+            return r == 'member' || r == 'adherant' || r == 'adherent' || r == 'user' || r.isEmpty;
+          })
+          .map((doc) => Member.fromMap(doc.data(), doc.id))
+          .toList();
+
+      if (list.isNotEmpty) {
         _cachedMembers = list;
         await _saveToDisk();
         return list;
       } else {
-        for (final m in _defaultMembers) {
-          try {
-            await _db!.collection('members').doc(m.id).set(m.toMap());
-          } catch (_) {}
-        }
-        _cachedMembers = List.from(_defaultMembers);
-        await _saveToDisk();
-        return List.from(_defaultMembers);
+        return await fetchMembers();
       }
     });
   }
@@ -90,11 +79,17 @@ class MemberService {
 
     try {
       if (_db != null) {
-        final snapshot = await _db!.collection('members').get();
-        if (snapshot.docs.isNotEmpty) {
-          _cachedMembers = snapshot.docs
-              .map((doc) => Member.fromMap(doc.data(), doc.id))
-              .toList();
+        final snapshot = await _db!.collection('users').get();
+        final list = snapshot.docs
+            .where((doc) {
+              final r = (doc.data()['role'] ?? '').toString().toLowerCase();
+              return r == 'member' || r == 'adherant' || r == 'adherent' || r == 'user' || r.isEmpty;
+            })
+            .map((doc) => Member.fromMap(doc.data(), doc.id))
+            .toList();
+
+        if (list.isNotEmpty) {
+          _cachedMembers = list;
           await _saveToDisk();
           return List.from(_cachedMembers!);
         }
@@ -166,7 +161,9 @@ class MemberService {
 
     try {
       if (_db != null) {
-        await _db!.collection('members').doc(newMember.id).set(newMember.toMap());
+        final data = newMember.toMap();
+        data['role'] = 'member';
+        await _db!.collection('users').doc(newMember.id).set(data);
       }
     } catch (e) {
       if (kDebugMode) print('MemberService Firestore save fallback: $e');
@@ -184,10 +181,11 @@ class MemberService {
   Future<void> approveMemberSubscription(String memberId, String approvedPlanName) async {
     try {
       if (_db != null) {
-        await _db!.collection('members').doc(memberId).set({
+        await _db!.collection('users').doc(memberId).set({
           'status': 'active',
           'subscriptionName': approvedPlanName,
           'isSubscriptionApproved': true,
+          'role': 'member',
         }, SetOptions(merge: true));
       }
     } catch (e) {
@@ -211,7 +209,9 @@ class MemberService {
   Future<void> updateMember(Member updated) async {
     try {
       if (_db != null) {
-        await _db!.collection('members').doc(updated.id).update(updated.toMap());
+        final data = updated.toMap();
+        data['role'] = 'member';
+        await _db!.collection('users').doc(updated.id).set(data, SetOptions(merge: true));
       }
     } catch (_) {}
 
@@ -228,7 +228,7 @@ class MemberService {
   Future<void> deleteMember(String memberId) async {
     try {
       if (_db != null) {
-        await _db!.collection('members').doc(memberId).delete();
+        await _db!.collection('users').doc(memberId).delete();
       }
     } catch (_) {}
 
