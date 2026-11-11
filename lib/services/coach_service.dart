@@ -66,17 +66,13 @@ class CoachService {
     }
 
     return _db!.collection('coaches').snapshots().asyncMap((snapshot) async {
-      final colCoaches = snapshot.docs
-          .map((doc) => Coach.fromMap(doc.data(), doc.id))
-          .toList();
-
-      final realUserCoaches = await _fetchRealCoachesFromUsers();
-      final merged = _mergeCoaches(colCoaches, realUserCoaches);
-
-      if (merged.isNotEmpty) {
-        _cachedCoaches = merged;
+      if (snapshot.docs.isNotEmpty) {
+        final list = snapshot.docs
+            .map((doc) => Coach.fromMap(doc.data(), doc.id))
+            .toList();
+        _cachedCoaches = list;
         await _saveToDisk();
-        return merged;
+        return list;
       } else {
         for (final c in _defaultCoaches) {
           try {
@@ -90,43 +86,6 @@ class CoachService {
     });
   }
 
-  Future<List<Coach>> _fetchRealCoachesFromUsers() async {
-    if (_db == null) return [];
-    try {
-      final snap = await _db!.collection('users').where('role', isEqualTo: 'coach').get();
-      final list = <Coach>[];
-      for (final doc in snap.docs) {
-        final data = doc.data();
-        list.add(Coach(
-          id: doc.id,
-          name: data['name'] ?? 'Coach',
-          email: data['email'] ?? '',
-          phone: data['phone'] ?? '',
-          bio: data['bio'] ?? 'Coach certifié GYM.',
-          specialties: List<String>.from(data['specialties'] ?? ['Musculation', 'Fitness']),
-          activeSessionsCount: data['activeSessionsCount'] ?? 5,
-          type: data['type'] == 'private' ? CoachType.private : CoachType.gym,
-        ));
-      }
-      return list;
-    } catch (_) {
-      return [];
-    }
-  }
-
-  List<Coach> _mergeCoaches(List<Coach> colList, List<Coach> userList) {
-    final map = <String, Coach>{};
-    for (final c in colList) {
-      map[c.id] = c;
-    }
-    for (final u in userList) {
-      if (!map.containsKey(u.id)) {
-        map[u.id] = u;
-      }
-    }
-    return map.values.toList();
-  }
-
   Future<List<Coach>> fetchCoaches() async {
     if (_cachedCoaches != null && _cachedCoaches!.isNotEmpty) {
       return List.from(_cachedCoaches!);
@@ -135,15 +94,10 @@ class CoachService {
     try {
       if (_db != null) {
         final snapshot = await _db!.collection('coaches').get();
-        final colCoaches = snapshot.docs
-            .map((doc) => Coach.fromMap(doc.data(), doc.id))
-            .toList();
-
-        final realUserCoaches = await _fetchRealCoachesFromUsers();
-        final merged = _mergeCoaches(colCoaches, realUserCoaches);
-
-        if (merged.isNotEmpty) {
-          _cachedCoaches = merged;
+        if (snapshot.docs.isNotEmpty) {
+          _cachedCoaches = snapshot.docs
+              .map((doc) => Coach.fromMap(doc.data(), doc.id))
+              .toList();
           await _saveToDisk();
           return List.from(_cachedCoaches!);
         }
@@ -217,15 +171,6 @@ class CoachService {
     try {
       if (_db != null) {
         await _db!.collection('coaches').doc(newCoach.id).set(newCoach.toMap());
-        await _db!.collection('users').doc(newCoach.id).set({
-          'name': newCoach.name,
-          'email': newCoach.email,
-          'phone': newCoach.phone,
-          'role': 'coach',
-          'type': type == CoachType.private ? 'private' : 'gym',
-          'bio': bio,
-          'specialties': specialties,
-        }, SetOptions(merge: true));
       }
     } catch (_) {}
 

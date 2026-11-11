@@ -63,17 +63,13 @@ class MemberService {
     }
 
     return _db!.collection('members').snapshots().asyncMap((snapshot) async {
-      final membersFromCol = snapshot.docs
-          .map((doc) => Member.fromMap(doc.data(), doc.id))
-          .toList();
-
-      final realUsersFromFirestore = await _fetchRealMembersFromUsersCollection();
-      final merged = _mergeMembers(membersFromCol, realUsersFromFirestore);
-
-      if (merged.isNotEmpty) {
-        _cachedMembers = merged;
+      if (snapshot.docs.isNotEmpty) {
+        final list = snapshot.docs
+            .map((doc) => Member.fromMap(doc.data(), doc.id))
+            .toList();
+        _cachedMembers = list;
         await _saveToDisk();
-        return merged;
+        return list;
       } else {
         for (final m in _defaultMembers) {
           try {
@@ -87,48 +83,6 @@ class MemberService {
     });
   }
 
-  Future<List<Member>> _fetchRealMembersFromUsersCollection() async {
-    if (_db == null) return [];
-    try {
-      final snap = await _db!.collection('users').get();
-      final list = <Member>[];
-      for (final doc in snap.docs) {
-        final data = doc.data();
-        final role = data['role'] ?? 'member';
-        if (role == 'member' || role == 'adherant' || role == 'user') {
-          list.add(Member(
-            id: doc.id,
-            name: data['name'] ?? 'Adhérent',
-            email: data['email'] ?? '',
-            phone: data['phone'] ?? '',
-            status: Member._parseStatus(data['status'] ?? 'toVerify'),
-            subscriptionName: data['subscriptionName'] ?? 'Abonnement Mensuel - Musculation & Force',
-            createdAt: data['createdAt'] != null
-                ? DateTime.tryParse(data['createdAt'].toString()) ?? DateTime.now()
-                : DateTime.now(),
-            isSubscriptionApproved: data['isSubscriptionApproved'] ?? (data['status'] == 'active'),
-          ));
-        }
-      }
-      return list;
-    } catch (_) {
-      return [];
-    }
-  }
-
-  List<Member> _mergeMembers(List<Member> colList, List<Member> usersList) {
-    final map = <String, Member>{};
-    for (final m in colList) {
-      map[m.id] = m;
-    }
-    for (final u in usersList) {
-      if (!map.containsKey(u.id)) {
-        map[u.id] = u;
-      }
-    }
-    return map.values.toList();
-  }
-
   Future<List<Member>> fetchMembers() async {
     if (_cachedMembers != null && _cachedMembers!.isNotEmpty) {
       return List.from(_cachedMembers!);
@@ -137,15 +91,10 @@ class MemberService {
     try {
       if (_db != null) {
         final snapshot = await _db!.collection('members').get();
-        final membersFromCol = snapshot.docs
-            .map((doc) => Member.fromMap(doc.data(), doc.id))
-            .toList();
-
-        final realUsers = await _fetchRealMembersFromUsersCollection();
-        final merged = _mergeMembers(membersFromCol, realUsers);
-
-        if (merged.isNotEmpty) {
-          _cachedMembers = merged;
+        if (snapshot.docs.isNotEmpty) {
+          _cachedMembers = snapshot.docs
+              .map((doc) => Member.fromMap(doc.data(), doc.id))
+              .toList();
           await _saveToDisk();
           return List.from(_cachedMembers!);
         }
@@ -236,12 +185,6 @@ class MemberService {
     try {
       if (_db != null) {
         await _db!.collection('members').doc(memberId).set({
-          'status': 'active',
-          'subscriptionName': approvedPlanName,
-          'isSubscriptionApproved': true,
-        }, SetOptions(merge: true));
-
-        await _db!.collection('users').doc(memberId).set({
           'status': 'active',
           'subscriptionName': approvedPlanName,
           'isSubscriptionApproved': true,
